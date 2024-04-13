@@ -1,0 +1,18 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+RWStructuredBuffer<float> _Positions;
+float _Width;
+uint _Density;
+
+float CalculatePosition(int id)
+{
+    return _Width * id / (_Density - 1.0) - _Width * 0.5;
+}
+
+[numthreads(64,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+	if (id.x < _Density)
+		_Positions[id.x] = CalculatePosition(id.x);
+}

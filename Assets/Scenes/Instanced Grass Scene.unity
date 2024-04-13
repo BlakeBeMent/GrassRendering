@@ -153,9 +153,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-  width: 20
-  density: 600
+  width: 125000
+  density: 100000
   shader: {fileID: 4800000, guid: c882ee1f95e69f94a8df814a6a458b1e, type: 3}
+  computeShader: {fileID: 7200000, guid: ec5dc3880e0cdf6418c7165ca94a73de, type: 3}
 --- !u!4 &370084332
 Transform:
   m_ObjectHideFlags: 0
@@ -342,7 +343,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1289028636}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -20}
+  m_LocalPosition: {x: 0, y: 1, z: -5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
