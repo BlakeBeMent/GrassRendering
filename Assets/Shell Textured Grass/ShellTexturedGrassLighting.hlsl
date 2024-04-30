@@ -3,21 +3,25 @@
 #include "UnityCG.cginc"
 
 int _ShellCount;
-int _Index;
-float _Density;
+float _Density, _Scarcity;
 float _Height;
 float _MinHeight;
-float3 _Color;
+float _HeightAttenuation;
+float3 _BaseColor, _TipColor;
+float _BaseWidth, _TipWidth;
 
 struct VertexData {
 	float4 vertex : POSITION;
 	float4 normal : NORMAL;
 	float2 uv : TEXCOORD0;
+	uint instanceID : SV_InstanceID;
 };
 
 struct v2f {
 	float4 position : SV_POSITION;
 	float2 uv : TEXCOORD0;
+	float shellHeight : TEXCOORD1;
+	uint instanceID : SV_InstanceID;
 };
 
 float hash(uint n)
@@ -31,23 +35,39 @@ float hash(uint n)
 v2f VertexProgram(VertexData i)
 {
 	v2f o;
-	if (_ShellCount > 1)
-	{
-		float height = _Height * _Index / (_ShellCount - 1);
-		i.vertex += i.normal * height;
-	}
+
+	o.shellHeight = pow((float) i.instanceID / (_ShellCount - 1.0), _HeightAttenuation);
+	i.vertex += i.normal * _Height * o.shellHeight;
+
 	o.position = UnityObjectToClipPos(i.vertex);
 	o.uv = i.uv;
+	o.instanceID = i.instanceID;
+
 	return o;
 }
 
 float4 FragmentProgram(v2f i) : SV_Target
 {
 	float2 block = floor(i.uv * _Density);
-	int seed = block.x + block.y * 100;
-	float rand = lerp(_MinHeight, 1, hash(seed));
-	if (_ShellCount > 1 && (float) _Index / (_ShellCount - 1) > rand)
+
+	// block uvs relative to the center of the block with range [-1,1]
+	float2 blockCoords = frac(i.uv * _Density) * 2.0 - 1.0;
+
+	int blockSeed = block.x + block.y * 100;
+	float blockValue = hash(blockSeed);
+	
+	if (blockValue < _Scarcity)
 		discard;
-	return float4(_Color.x, _Color.y * (float) _Index / _ShellCount, _Color.z, 1);
+
+	// convert block values from [_Scarcity, 1] to [_MinHeight, 1]
+	float blockHeight = (_MinHeight - _MinHeight * blockValue + blockValue - _Scarcity) / (1 - _Scarcity);
+
+	float width = lerp(_BaseWidth, _TipWidth, i.shellHeight / blockHeight);
+
+	if (i.shellHeight > blockHeight || length(blockCoords) > width)
+		discard;
+
+	float3 color = lerp(_BaseColor, _TipColor, i.shellHeight);
+	return float4(color * i.shellHeight, 1);
 }
 #endif

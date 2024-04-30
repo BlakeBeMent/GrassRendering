@@ -9,6 +9,7 @@ Shader "Custom/ShellTexturing"
 
         Pass
         {
+            Cull Off
             HLSLPROGRAM
             #pragma vertex VertexProgram
             #pragma fragment FragmentProgram
