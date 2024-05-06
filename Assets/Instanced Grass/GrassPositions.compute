@@ -1,18 +1,31 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel CSMain
 
-RWStructuredBuffer<float> _Positions;
+RWStructuredBuffer<float2> _Positions;
 float _Width;
 uint _Density;
 
-float CalculatePosition(int id)
+float func(int i)
 {
-    return _Width * id / (_Density - 1.0) - _Width * 0.5;
+	return (1 - _Width) * 0.5 + (_Width - 1.0) * i / (_Density - 1.0);
 }
 
-[numthreads(64,1,1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+float2 CalculatePosition3D(uint3 id)
 {
-	if (id.x < _Density)
-		_Positions[id.x] = CalculatePosition(id.x);
+	if (_Density == 1)
+	{
+		return 0.0;
+	}
+	float x = func(id.x);
+	float y = func(id.y);
+	return float2(x, y);
+}
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+	if (id.x < _Density && id.y < _Density)
+	{
+		_Positions[id.x + _Density * id.y] = CalculatePosition3D(id);
+	}
 }

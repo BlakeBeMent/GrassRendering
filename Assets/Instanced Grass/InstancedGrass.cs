@@ -7,7 +7,7 @@ public class InstancedGrass : MonoBehaviour
     [SerializeField, Tooltip("Grass blade mesh")]
     private Mesh mesh;
 
-    [SerializeField, Min(0), Tooltip("Width of the grass field")] 
+    [SerializeField, Min(1), Tooltip("Width of the grass field")] 
     float width;
 
     [SerializeField, Min(1), Tooltip("How many grass blades to render")]
@@ -25,21 +25,22 @@ public class InstancedGrass : MonoBehaviour
     static readonly int
         positionsId = Shader.PropertyToID("_Positions"),
         widthId = Shader.PropertyToID("_Width"),
-        densityId = Shader.PropertyToID("_Density");
+        densityId = Shader.PropertyToID("_Density"),
+        rotationId = Shader.PropertyToID("_Rotation");
 
     private void OnEnable()
     {
-        positionsBuffer = new ComputeBuffer(density, sizeof(float));
+        positionsBuffer = new ComputeBuffer(density * density, sizeof(float) * 2);
         computeShader.SetBuffer(0, positionsId, positionsBuffer);
         computeShader.SetFloat(widthId, width);
         computeShader.SetInt(densityId, density);
 
-        int groups = Mathf.CeilToInt(density / 64f);
-        computeShader.Dispatch(0, groups, 1, 1);
+        int groups = Mathf.CeilToInt(density / 8f);
+        computeShader.Dispatch(0, groups, groups, 1);
 
         material = new Material(shader);
         renderParams.material = material;
-        renderParams.worldBounds = new Bounds(Vector3.zero, new Vector3(width, 1, 1));
+        renderParams.worldBounds = new Bounds(Vector3.zero, new Vector3(width, 1, width));
         material.SetBuffer(positionsId, positionsBuffer);
     }
 
@@ -51,7 +52,13 @@ public class InstancedGrass : MonoBehaviour
 
     private void Update()
     {
-        Graphics.RenderMeshPrimitives(renderParams, mesh, 0, density);
+        for(float i = -45f; i <= 45f; i += 45f)
+        {
+            renderParams.material = new Material(shader);
+            renderParams.material.SetBuffer(positionsId, positionsBuffer);
+            renderParams.material.SetFloat(rotationId, Mathf.Deg2Rad * i);
+            Graphics.RenderMeshPrimitives(renderParams, mesh, 0, density * density);
+        }
     }
 
     #if UNITY_EDITOR
