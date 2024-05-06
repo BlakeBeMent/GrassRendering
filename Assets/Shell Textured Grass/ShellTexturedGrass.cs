@@ -70,7 +70,18 @@ public class ShellTexturedGrass : MonoBehaviour
     {
         Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
 
-        //renderParams.material.SetMatrix("_Matrix", transform.localToWorldMatrix);
+        renderParams.material.SetMatrix("_Matrix", transform.localToWorldMatrix);
+        renderParams.worldBounds = GetComponent<MeshRenderer>().bounds;
         Graphics.RenderMeshPrimitives(renderParams, mesh, 0, shellCount);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
+        if (meshRenderer != null)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireCube(meshRenderer.bounds.center, meshRenderer.bounds.size);
+        }
     }
 }

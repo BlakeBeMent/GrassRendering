@@ -10,9 +10,11 @@ float _HeightAttenuation;
 float3 _BaseColor, _TipColor;
 float _BaseWidth, _TipWidth;
 
+float4x4 _Matrix;
+
 struct VertexData {
 	float4 vertex : POSITION;
-	float4 normal : NORMAL;
+	float3 normal : NORMAL;
 	float2 uv : TEXCOORD0;
 	uint instanceID : SV_InstanceID;
 };
@@ -37,9 +39,12 @@ v2f VertexProgram(VertexData i)
 	v2f o;
 
 	o.shellHeight = pow((float) i.instanceID / (_ShellCount - 1.0), _HeightAttenuation);
-	i.vertex += i.normal * _Height * o.shellHeight;
 
-	o.position = UnityObjectToClipPos(i.vertex);
+	i.vertex = mul(_Matrix, i.vertex);
+
+	i.vertex += normalize(mul(_Matrix, float4(i.normal, 0))) * _Height * o.shellHeight;
+
+	o.position = mul(UNITY_MATRIX_VP, i.vertex);
 	o.uv = i.uv;
 	o.instanceID = i.instanceID;
 
